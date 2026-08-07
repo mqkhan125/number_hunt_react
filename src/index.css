@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #0b0718;
+  --color-ink-900: #140e26;
+  --color-ink-800: #1a1330;
+  --color-ink-700: #241a3d;
+  --color-ink-600: #2a2140;
+  --color-mist: #b8adcf;
+  --color-mist-dim: #6f6389;
+  --color-paper: #fdfbff;
+  --color-flare: #ff7a3d;
+  --color-flare-2: #ffb703;
+  --color-pop: #ff006e;
+  --color-cool: #3a86ff;
+  --color-good: #06d6a0;
+  --color-bad: #ff5470;
+
+  --animate-pop-in: pop-in 0.35s ease;
+  --animate-shake: shake-x 0.4s ease;
+  --animate-fall: fall 2.4s linear forwards;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes shake-x {
+  10%,
+  90% {
+    transform: translateX(-2px);
+  }
+  20%,
+  80% {
+    transform: translateX(4px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-8px);
+  }
+  40%,
+  60% {
+    transform: translateX(8px);
+  }
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(560px) rotate(400deg);
+    opacity: 0.15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
