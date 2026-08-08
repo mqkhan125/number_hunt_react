@@ -13,7 +13,7 @@ export default function NumberGuessGame() {
   const [message, setMessage] = useState(
     `Guess a number between 1 and ${LEVELS[0].range}`
   );
-  const [status, setStatus] = useState("playing"); // playing | won | lost
+  const [status, setStatus] = useState("playing");
   const [history, setHistory] = useState([]);
   const [unlockedLevel, setUnlockedLevel] = useState(1);
   const [shake, setShake] = useState(false);
