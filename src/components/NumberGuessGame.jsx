@@ -4,23 +4,29 @@ import LevelLadder from "./LevelLadder";
 import AttemptsBar from "./AttemptsBar";
 import GuessHistory from "./GuessHistory";
 import Confetti from "./Confetti";
+import BackButton from "./BackButton";
+import SoundToggle from "./SoundToggle";
+import { playCorrect, playWrong, playClick } from "../utils/sound";
+import { getBest, trySaveBest } from "../utils/bestScores";
 
-export default function NumberGuessGame() {
+export default function NumberGuessGame({ onBack }) {
   const [levelIndex, setLevelIndex] = useState(0);
   const [target, setTarget] = useState(() => randInRange(LEVELS[0].range));
   const [attemptsLeft, setAttemptsLeft] = useState(LEVELS[0].attempts);
   const [guessValue, setGuessValue] = useState("");
   const [message, setMessage] = useState(
-    `Guess a number between 1 and ${LEVELS[0].range}`
+    `Guess a number between 1 and ${LEVELS[0].range}`,
   );
   const [status, setStatus] = useState("playing");
   const [history, setHistory] = useState([]);
   const [unlockedLevel, setUnlockedLevel] = useState(1);
   const [shake, setShake] = useState(false);
+  const [newBest, setNewBest] = useState(false);
   const inputRef = useRef(null);
 
   const level = LEVELS[levelIndex];
   const isLastLevel = levelIndex === LEVELS.length - 1;
+  const bestScore = getBest(`journey-${level.id}`);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -28,6 +34,7 @@ export default function NumberGuessGame() {
 
   function startLevel(idx) {
     const lvl = LEVELS[idx];
+    playClick();
     setLevelIndex(idx);
     setTarget(randInRange(lvl.range));
     setAttemptsLeft(lvl.attempts);
@@ -35,6 +42,7 @@ export default function NumberGuessGame() {
     setHistory([]);
     setStatus("playing");
     setMessage(`Guess a number between 1 and ${lvl.range}`);
+    setNewBest(false);
   }
 
   function triggerShake() {
@@ -56,19 +64,25 @@ export default function NumberGuessGame() {
 
     const remaining = attemptsLeft - 1;
     const isCorrect = guess === target;
-    const direction = guess < target ? "low" : guess > target ? "high" : "exact";
+    const direction =
+      guess < target ? "low" : guess > target ? "high" : "exact";
 
     setHistory((h) => [...h, { guess, direction }].slice(-6));
 
     if (isCorrect) {
       setAttemptsLeft(remaining);
       setStatus("won");
+      // Track personal best (attempts used = total - remaining)
+      const attemptsUsed = level.attempts - remaining;
+      const isNewBest = trySaveBest(`journey-${level.id}`, attemptsUsed);
+      setNewBest(isNewBest);
       if (levelIndex + 1 > unlockedLevel && levelIndex + 1 < LEVELS.length) {
         setUnlockedLevel(levelIndex + 1);
       } else if (levelIndex === LEVELS.length - 1) {
         setUnlockedLevel(LEVELS.length);
       }
       setMessage(`Solved! The number was ${target}.`);
+      playCorrect();
       return;
     }
 
@@ -76,11 +90,13 @@ export default function NumberGuessGame() {
       setAttemptsLeft(0);
       setStatus("lost");
       setMessage(`Out of attempts. The number was ${target}.`);
+      playWrong();
       return;
     }
 
     setAttemptsLeft(remaining);
     setMessage(guess < target ? "Too low — go higher" : "Too high — go lower");
+    playWrong();
   }
 
   function handleKeyDown(e) {
@@ -90,6 +106,12 @@ export default function NumberGuessGame() {
   return (
     <div className="min-h-screen w-full flex justify-center items-center p-6 bg-[radial-gradient(circle_at_15%_10%,#241a3d_0%,#140e26_55%,#0b0718_100%)] font-sans">
       <div className="w-full max-w-[440px] flex flex-col items-center gap-4">
+        {/* Navigation bar — back to menu + sound toggle */}
+        <div className="w-full flex justify-between items-center">
+          <BackButton onBack={onBack} />
+          <SoundToggle />
+        </div>
+
         <LevelLadder
           activeIndex={levelIndex}
           unlockedLevel={unlockedLevel}
@@ -117,7 +139,20 @@ export default function NumberGuessGame() {
             </div>
           </div>
 
-          <AttemptsBar attemptsLeft={attemptsLeft} totalAttempts={level.attempts} />
+          {/* Show personal best for this level if one exists */}
+          {bestScore !== null && (
+            <div className="flex justify-center mb-3">
+              <span className="text-[11px] font-bold text-flare-2 bg-flare-2/10 rounded-full px-3 py-1">
+                Personal Best: {bestScore} attempt
+                {bestScore !== 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
+
+          <AttemptsBar
+            attemptsLeft={attemptsLeft}
+            totalAttempts={level.attempts}
+          />
 
           {status === "playing" ? (
             <>
@@ -155,6 +190,12 @@ export default function NumberGuessGame() {
                 {message}
               </p>
 
+              {newBest && (
+                <p className="text-sm text-flare-2 font-bold m-0">
+                  ⭐ New Personal Best!
+                </p>
+              )}
+
               {status === "won" && !isLastLevel && (
                 <button
                   onClick={() => startLevel(levelIndex + 1)}
@@ -185,7 +226,8 @@ export default function NumberGuessGame() {
         </div>
 
         <p className="text-xs text-mist-dim text-center m-0">
-          Win a level to unlock the next. Fewer attempts, wider range as you climb.
+          Win a level to unlock the next. Fewer attempts, wider range as you
+          climb.
         </p>
       </div>
     </div>
