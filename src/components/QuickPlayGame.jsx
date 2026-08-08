@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { QUICK_PLAY } from "../data/quickPlay";
+import { QUICK_PLAY } from "../utils/quickPlay";
 import { randInRange } from "../data/levels";
 import AttemptsBar from "./AttemptsBar";
 import GuessHistory from "./GuessHistory";
